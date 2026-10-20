@@ -1,400 +1,547 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="robots" content="noindex,nofollow">
-<title>三国图鉴 · 运营监控台 · Admin</title>
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>三国图鉴 · 后台监控台</title>
 <style>
 :root{
-  --bg:#0d1117;--panel:#161c26;--panel2:#1d2432;--line:#2a3242;--line2:#37415a;
-  --ink:#e8e4d8;--ink2:#b8bfcc;--ink3:#7c8698;
-  --gold:#d9bd76;--gold2:#e8c988;--red:#e0554a;--green:#4fae7c;--blue:#6b9fe8;
+  --bg:#0c1319; --bg2:#0f1a22; --panel:#121e27; --line:rgba(255,255,255,.09);
+  --txt:#e8eef4; --dim:#8fa3b3; --gold:#f2c14e; --red:#e05b4b; --grn:#3fae7a; --blu:#5b9bd5;
 }
-*{margin:0;padding:0;box-sizing:border-box}
-body{background:var(--bg);color:var(--ink);font-family:"Microsoft YaHei","PingFang SC",sans-serif;font-size:14px;min-height:100vh}
-a{color:var(--gold2)}
-.wrap{max-width:1280px;margin:0 auto;padding:22px 20px 60px}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;height:100%}
+body{
+  background:radial-gradient(1200px 600px at 20% -10%,#16303f 0%,transparent 60%),var(--bg);
+  color:var(--txt);font:14px/1.55 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",Segoe UI,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:var(--gold);text-decoration:none}
+.top{display:flex;align-items:center;gap:12px;padding:14px 22px;border-bottom:1px solid var(--line);background:rgba(9,14,19,.72);position:sticky;top:0;z-index:20;backdrop-filter:blur(8px)}
+.logo{width:30px;height:30px;border-radius:8px;background:linear-gradient(145deg,#b3352b,#6d1a14);display:grid;place-items:center;font-size:12px;font-weight:700;color:#f7e6c4;box-shadow:0 2px 10px rgba(179,53,43,.4)}
+.top h1{font-size:15px;margin:0;letter-spacing:.06em;font-weight:600}
+.top h1 b{color:var(--gold);font-weight:600}
+.top .sp{flex:1}
+.pill{font-size:11px;color:var(--dim);border:1px solid var(--line);padding:3px 9px;border-radius:20px}
+.btn{cursor:pointer;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--txt);padding:7px 13px;border-radius:8px;font-size:12.5px;font-family:inherit;transition:.15s}
+.btn:hover{background:rgba(242,193,78,.12);border-color:rgba(242,193,78,.4)}
+.btn.gold{background:linear-gradient(160deg,#f2c14e,#d8a02e);color:#241a08;border-color:transparent;font-weight:600}
+.btn.gold:hover{filter:brightness(1.06)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
 
-/* 登录 */
-.login-mask{position:fixed;inset:0;background:radial-gradient(90% 90% at 50% 0%,#1a2130 0%,#0d1117 70%);display:grid;place-items:center;z-index:50}
-.login-box{width:380px;max-width:92vw;background:var(--panel);border:1px solid var(--line2);border-radius:14px;padding:34px 32px;box-shadow:0 30px 80px rgba(0,0,0,.6)}
-.login-box .seal{width:64px;height:64px;margin:0 auto 16px;border:2px solid var(--gold);border-radius:10px;display:grid;place-items:center;
-  color:var(--gold2);font-weight:700;font-size:15px;letter-spacing:2px;text-align:center;line-height:1.25;background:rgba(217,189,118,.06)}
-.login-box h1{font-size:17px;text-align:center;letter-spacing:.35em;color:var(--ink)}
-.login-box .sub{font-size:11px;color:var(--ink3);text-align:center;margin:6px 0 22px;letter-spacing:.12em}
+/* gate */
+#gate{min-height:calc(100vh - 60px);display:grid;place-items:center;padding:30px}
+.card{width:100%;max-width:380px;background:linear-gradient(180deg,rgba(24,38,48,.96),rgba(16,26,34,.96));border:1px solid var(--line);border-radius:16px;padding:26px 24px;box-shadow:0 24px 60px rgba(0,0,0,.45)}
+.card h2{margin:0 0 4px;font-size:18px;letter-spacing:.04em}
+.card p.sub{margin:0 0 20px;color:var(--dim);font-size:12.5px}
+label{display:block;font-size:12px;color:var(--dim);margin:0 0 6px}
+input{width:100%;background:#0b141b;border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px 12px;font-size:14px;font-family:inherit;outline:none;transition:.15s}
+input:focus{border-color:rgba(242,193,78,.55);box-shadow:0 0 0 3px rgba(242,193,78,.1)}
 .field{margin-bottom:14px}
-.field label{display:block;font-size:11px;color:var(--ink3);letter-spacing:.14em;margin-bottom:6px}
-.field input{width:100%;background:#12161f;border:1px solid var(--line);border-radius:8px;color:var(--ink);
-  padding:10px 12px;font-size:14px;outline:none;transition:.2s}
-.field input:focus{border-color:var(--gold)}
-.btn{display:inline-block;border:1px solid var(--line2);background:var(--panel2);color:var(--ink);border-radius:8px;
-  padding:9px 16px;font-size:13px;cursor:pointer;letter-spacing:.06em;transition:.15s}
-.btn:hover{border-color:var(--gold);color:var(--gold2)}
-.btn.primary{background:linear-gradient(135deg,#e8c988,#c9a45c);color:#241a08;font-weight:700;border:none}
-.btn.primary:hover{filter:brightness(1.08);color:#241a08}
-.btn.sm{padding:5px 10px;font-size:11.5px;border-radius:6px}
-.btn.danger{color:#ff9d94;border-color:#5a3a37}
-.btn.w{width:100%}
-.err{color:var(--red);font-size:12px;min-height:18px;margin-top:6px;text-align:center}
+.err{color:#ff8f80;font-size:12.5px;min-height:18px;margin-top:4px}
+.tip{margin-top:16px;font-size:11.5px;color:#6c8092;line-height:1.6}
 
-/* 头部 */
-header{display:flex;align-items:center;gap:14px;padding-bottom:16px;border-bottom:1px solid var(--line);margin-bottom:20px}
-header .seal{width:44px;height:44px;border:1.5px solid var(--gold);border-radius:8px;display:grid;place-items:center;color:var(--gold2);
-  font-weight:700;font-size:11px;line-height:1.2;text-align:center;background:rgba(217,189,118,.06)}
-header h1{font-size:16px;letter-spacing:.18em}
-header .sub{font-size:11px;color:var(--ink3);margin-top:3px;letter-spacing:.06em}
-header .sp{flex:1}
-.badge-ok{font-size:11px;color:var(--green);border:1px solid rgba(79,174,124,.4);border-radius:999px;padding:3px 10px}
-
-/* KPI */
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:18px}
-.kpi{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:16px 18px}
-.kpi b{display:block;font-size:26px;color:var(--gold2);font-variant-numeric:tabular-nums;letter-spacing:.02em}
-.kpi span{font-size:11px;color:var(--ink3);letter-spacing:.14em}
-.kpi i{font-style:normal;font-size:11px;color:var(--ink2);display:block;margin-top:4px}
-
-/* 面板 */
-.grid2{display:grid;grid-template-columns:1.6fr 1fr;gap:14px;margin-bottom:16px}
+/* app */
+main{max-width:1280px;margin:0 auto;padding:20px 22px 60px}
+.tabs{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap}
+.tab{cursor:pointer;padding:8px 16px;border-radius:9px;font-size:13px;color:var(--dim);border:1px solid transparent;background:transparent;font-family:inherit}
+.tab.on{background:rgba(242,193,78,.12);color:var(--gold);border-color:rgba(242,193,78,.3)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.kpi .l{font-size:11.5px;color:var(--dim);letter-spacing:.04em}
+.kpi .v{font-size:26px;font-weight:600;margin-top:6px;font-variant-numeric:tabular-nums}
+.kpi .d{font-size:11px;color:#6c8092;margin-top:2px}
+.kpi.hi .v{color:var(--gold)}
+.grid2{display:grid;grid-template-columns:1.55fr 1fr;gap:14px}
 @media(max-width:900px){.grid2{grid-template-columns:1fr}}
-.panel{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:16px 18px}
-.panel h3{font-size:12.5px;letter-spacing:.16em;color:var(--ink2);margin-bottom:12px;font-weight:600}
-.panel h3 em{font-style:normal;color:var(--gold2)}
-.chips{display:flex;gap:6px;flex-wrap:wrap}
-.chip{border:1px solid var(--line2);background:transparent;color:var(--ink2);border-radius:999px;padding:4px 12px;font-size:11px;cursor:pointer;letter-spacing:.08em}
-.chip.on{background:linear-gradient(135deg,#e8c988,#c9a45c);color:#241a08;font-weight:700;border-color:transparent}
-
-/* 表格 */
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px}
+.panel h3{margin:0 0 14px;font-size:13px;color:#c9d7e2;font-weight:600;display:flex;align-items:center;gap:8px}
+.panel h3 .sp{flex:1}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{cursor:pointer;background:transparent;border:0;color:var(--dim);font-size:11.5px;padding:5px 10px;font-family:inherit}
+.seg button.on{background:rgba(242,193,78,.16);color:var(--gold)}
 table{width:100%;border-collapse:collapse;font-size:12.5px}
-th{font-size:10.5px;color:var(--ink3);letter-spacing:.1em;text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
-td{padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.045);color:var(--ink2);white-space:nowrap}
-tr:hover td{background:rgba(232,201,136,.04);color:var(--ink)}
-td .num{font-variant-numeric:tabular-nums}
-.tag{font-size:10px;border-radius:4px;padding:1px 6px;border:1px solid currentColor}
-.tag.cn{color:#e8a15c}
-.tag.intl{color:#6b9fe8}
-.tag.ban{color:#ff9d94}
-.search{width:230px;background:#12161f;border:1px solid var(--line);border-radius:7px;color:var(--ink);padding:7px 11px;font-size:12.5px;outline:none}
-.search:focus{border-color:var(--gold)}
-.muted{color:var(--ink3);font-size:12px;line-height:1.8}
-.note{margin-top:14px;font-size:11px;color:var(--ink3);line-height:1.8;border-top:1px dashed var(--line);padding-top:10px}
-.empty{padding:30px;text-align:center;color:var(--ink3)}
+th{text-align:left;color:var(--dim);font-weight:500;font-size:11.5px;letter-spacing:.03em;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:9px 10px;border-bottom:1px solid rgba(255,255,255,.05);vertical-align:middle}
+tbody tr:hover{background:rgba(255,255,255,.025)}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11.5px}
+.tag{display:inline-block;font-size:10.5px;padding:2px 7px;border-radius:5px;background:rgba(91,155,213,.14);color:#8fc0e8}
+.tag.cn{background:rgba(224,91,75,.15);color:#f0a196}
+.tag.intl{background:rgba(63,174,122,.15);color:#7fd3a7}
+.muted{color:#6c8092}
+.empty{color:var(--dim);text-align:center;padding:40px 0;font-size:13px}
+.toolbar{display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+.toolbar input{max-width:260px}
+.bar{height:6px;border-radius:4px;background:rgba(255,255,255,.07);overflow:hidden;min-width:60px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,#d8a02e,#f2c14e)}
+.foot{margin-top:22px;font-size:11.5px;color:#5d7183;line-height:1.7}
+.hint{font-size:11.5px;color:#6c8092;margin-top:8px}
 </style>
 </head>
 <body>
 
-<div class="login-mask" id="loginMask">
-  <div class="login-box">
-    <div class="seal">运营<br>监控</div>
-    <h1>三国图鉴 · 后台</h1>
-    <div class="sub">SANGUO ATLAS · ADMIN CONSOLE</div>
-    <div class="field"><label>管理员账号</label><input id="adUser" autocomplete="username" placeholder=""></div>
-    <div class="field"><label>密码</label><input id="adPass" type="password" autocomplete="current-password" placeholder=""></div>
-    <div class="err" id="adErr"></div>
-    <button class="btn primary w" id="adLogin">登 录</button>
-    <div class="note" style="text-align:center;border:none;padding-top:14px">唯一管理员账号 · 登录状态仅保存在本浏览器</div>
-  </div>
+<div class="top">
+  <div class="logo">三國</div>
+  <h1>三國圖鑑 · <b>後台監控台</b></h1>
+  <span class="pill" id="modeTag">—</span>
+  <div class="sp"></div>
+  <span class="pill" id="whoTag">未登录</span>
+  <button class="btn" id="refreshBtn" hidden>刷新</button>
+  <button class="btn" id="logoutBtn" hidden>退出</button>
 </div>
 
-<div class="wrap" id="console" style="display:none">
-  <header>
-    <div class="seal">运营<br>监控</div>
-    <div>
-      <h1>三国图鉴 · 运营监控台</h1>
-      <div class="sub">账号注册管理 · DAU / MAU · 国内与海外维度 · 独立于公开站点</div>
+<section id="gate">
+  <div class="card">
+    <h2>管理员登录</h2>
+    <p class="sub">账号数据、访问与点击日志仅在此处可查</p>
+    <div class="field">
+      <label>用户名</label>
+      <input id="user" value="fanyzou" autocomplete="username" spellcheck="false">
     </div>
-    <span class="sp"></span>
-    <span class="badge-ok">管理员：fanyzou</span>
-    <button class="btn sm" id="btnLogout">退出</button>
-  </header>
-
-  <div class="kpis" id="kpis"></div>
-
-  <div class="grid2">
-    <div class="panel">
-      <h3 style="display:flex;align-items:center;gap:10px">近 30 天活跃 / 新增注册
-        <span class="sp" style="flex:1"></span>
-        <span class="chips" id="rgChips">
-          <button class="chip on" data-rg="all">全部</button>
-          <button class="chip" data-rg="cn">国内</button>
-          <button class="chip" data-rg="intl">海外</button>
-        </span>
-      </h3>
-      <div id="chart"></div>
+    <div class="field">
+      <label>密码</label>
+      <input id="pwd" type="password" autocomplete="current-password" placeholder="••••••••">
     </div>
-    <div class="panel">
-      <h3>用户地域分布</h3>
-      <div id="regionBox"></div>
-      <h3 style="margin-top:18px">数据源</h3>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <label class="btn sm" style="position:relative">导入监控数据 JSON
-          <input type="file" id="fileImp" accept=".json,application/json" style="position:absolute;inset:0;opacity:0;cursor:pointer">
-        </label>
-        <button class="btn sm" id="btnDemo">载入演示数据</button>
-        <button class="btn sm" id="btnClear">清空数据</button>
+    <div class="err" id="gateErr"></div>
+    <button class="btn gold" id="loginBtn" style="width:100%;padding:10px">登 录</button>
+    <div class="tip">数据存储于云端数据库；账号邮箱与手机号仅可在本控制台查询，前端页面对匿名访问完全不可读。</div>
+  </div>
+</section>
+
+<main id="app" hidden>
+  <div class="tabs">
+    <button class="tab on" data-tab="ov">概览</button>
+    <button class="tab" data-tab="acc">账号清单</button>
+    <button class="tab" data-tab="evt">事件流水</button>
+  </div>
+
+  <section id="tab-ov">
+    <div class="kpis" id="kpis"></div>
+    <div class="grid2">
+      <div class="panel">
+        <h3>近 30 天访问与注册
+          <span class="sp"></span>
+          <span class="seg" id="seg">
+            <button data-k="all" class="on">全部</button>
+            <button data-k="cn">国内</button>
+            <button data-k="intl">海外</button>
+          </span>
+        </h3>
+        <div id="chart"></div>
       </div>
-      <p class="muted" style="margin-top:10px">在图鉴站以管理员 <b>fanyzou</b> 登录后，于「我的主页 → 账号 → 导出监控数据」下载 JSON，再在此导入，即可查看真实注册与活跃数据。</p>
-      <div id="srcInfo" class="muted" style="margin-top:8px"></div>
+      <div class="panel">
+        <h3>地域分布</h3>
+        <div id="regions"></div>
+      </div>
     </div>
-  </div>
-
-  <div class="panel">
-    <h3 style="display:flex;align-items:center;gap:12px">账号注册管理 <em id="accCount"></em>
-      <span style="flex:1"></span>
-      <input class="search" id="accQ" placeholder="搜索 昵称 / 邮箱 / 手机…">
-    </h3>
-    <div style="overflow-x:auto">
-      <table id="accTable"></table>
+    <div class="panel" style="margin-top:14px">
+      <h3>近 7 天事件类型</h3>
+      <div id="topEv"></div>
     </div>
-  </div>
+  </section>
 
-  <div class="note">
-    说明：本监控台为独立部署（独立仓库 / 独立地址），与公开图鉴站点完全隔离，不公开、不被搜索引擎收录（noindex）。
-    统计口径 —— DAU：当日产生登录 / 发帖 / 回复 / 评价 / 抽卡 / 赠卡任一行为的去重用户数；MAU：近 30 天滚动窗口去重用户数；
-    地域维度：按用户浏览器时区判定（Asia/Shanghai 等 → 国内，其余 → 海外）。
+  <section id="tab-acc" hidden>
+    <div class="panel">
+      <div class="toolbar">
+        <h3 style="margin:0">注册账号 <span class="muted" id="accTotal" style="font-weight:400"></span></h3>
+        <span style="flex:1"></span>
+        <input id="accQ" placeholder="搜索邮箱 / 手机号 / 昵称">
+        <button class="btn" id="accSearch">搜索</button>
+        <button class="btn" id="accCsv">导出 CSV</button>
+      </div>
+      <div id="accTable"></div>
+      <div class="hint">按注册时间倒序；手机号默认脱敏，点击「显示」查看完整号码。</div>
+    </div>
+  </section>
+
+  <section id="tab-evt" hidden>
+    <div class="panel">
+      <div class="toolbar">
+        <h3 style="margin:0">事件流水 <span class="muted" id="evtTotal" style="font-weight:400"></span></h3>
+        <span style="flex:1"></span>
+        <select id="evtKind" class="btn" style="padding:7px 10px">
+          <option value="">全部事件</option>
+          <option value="visit">访问 visit</option>
+          <option value="click">点击 click</option>
+          <option value="login">登录 login</option>
+          <option value="register">注册 register</option>
+          <option value="draw">抽卡 draw</option>
+          <option value="post">发帖 post</option>
+          <option value="admin_login">后台登录 admin_login</option>
+        </select>
+        <button class="btn" id="evtMore">加载更多</button>
+      </div>
+      <div id="evtTable"></div>
+    </div>
+  </section>
+
+  <div class="foot">
+    数据来源：云端数据库 · 访问/点击由前端自动采集，登录与注册同时写入账号表<br>
+    仅本控制台持有会话令牌，可直接读取；图鉴站点对这几张表无任何读取权限
   </div>
-</div>
+</main>
 
 <script>
-(function(){
-"use strict";
-/* 管理员凭据（仅保存 SHA-256 摘要，不保存明文） */
-var U_HASH = "fd8d7cb3be90203b16f9fc3384fbc2a0042048862fa545724809c6c3cdf2b35e";
-var P_HASH = "72bd96f60bf698612fe7920d8d4eb2d3b27549dfa24592fe576c6c600fe8a772";
-var AUTH_KEY = "sg_admin_session";
+(function () {
+  "use strict";
+  var HOST = "https://sanguo-atlas.app.workbuddy.host";
+  var KEY = "wbpk_CuEbv9EAEwwQYI92Z1RcYH_mwa0b6O1sk6njj7GmgTpz45jl7qncG2M";
+  var SAME = false;
+  try { SAME = (location.origin === HOST); } catch (e) {}
 
-function $(s){ return document.querySelector(s); }
-function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];}); }
-function sha256hex(str){
-  return crypto.subtle.digest("SHA-256", new TextEncoder().encode(str)).then(function(b){
-    return Array.from(new Uint8Array(b)).map(function(x){return x.toString(16).padStart(2,"0");}).join("");
-  });
-}
-function dayStr(dt){ var d=dt?new Date(dt):new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+  var $ = function (s) { return document.querySelector(s); };
+  var $$ = function (s) { return Array.prototype.slice.call(document.querySelectorAll(s)); };
+  var TOK_KEY = "sg_adm_tok";
 
-/* ---------------- 数据 ---------------- */
-var DATA = null;           /* {users:[], evt:[]} */
-var RG = "all";
-var bans = {};             /* uid -> true 本地封禁标记 */
+  /* ---------- 传输层：同源直连 / 跨源中继 ---------- */
+  var cli = null, seq = 0, waits = {}, frame = null, fready = false, fq = [];
 
-function loadLocal(){
-  try{ DATA = JSON.parse(localStorage.getItem("sg_admin_data")||"null"); }catch(e){ DATA=null; }
-  try{ bans = JSON.parse(localStorage.getItem("sg_admin_bans")||"{}"); }catch(e){ bans={}; }
-}
-function saveLocal(){
-  try{ localStorage.setItem("sg_admin_data", JSON.stringify(DATA)); localStorage.setItem("sg_admin_bans", JSON.stringify(bans)); }catch(e){}
-}
-
-function demoData(){
-  var names = ["卧龙先生","常山赵子龙","翼德","公瑾","妙才","伯符","子义","文长","士元","奉先","云长","子敬","公覆","兴霸","元直","文和","仲达","伯约","子龙小号","江东小霸王"];
-  var users=[], evt=[], now=Date.now(), day=86400000;
-  for(var i=0;i<names.length;i++){
-    var created = now - (3+Math.floor(Math.random()*80))*day;
-    var rg = Math.random()<0.62 ? "cn" : "intl";
-    users.push({ uid:"u"+(i+1), name:names[i], email:"user"+(i+1)+"@example.com",
-      phone:"138"+String(10000000+i*137).slice(0,8), created:created, points:999+Math.floor(Math.random()*1800),
-      cards:1+Math.floor(Math.random()*8), streak:Math.floor(Math.random()*9), bestStreak:3+Math.floor(Math.random()*12),
-      lastLogin:dayStr(now-Math.floor(Math.random()*10)*day), rg:rg, role:"user" });
+  function initCli() {
+    if (cli) return cli;
+    if (!SAME) return null;
+    if (window.WorkBuddyCloud && window.WorkBuddyCloud.createWorkBuddyCloud) {
+      try { cli = window.WorkBuddyCloud.createWorkBuddyCloud({ endpoint: HOST, publishableKey: KEY }); } catch (e) { cli = null; }
+    }
+    return cli;
   }
-  for(var d=29;d>=0;d--){
-    var base = 6 + Math.round(6*Math.sin(d/4.2)+4);
-    var act = users.filter(function(u,i){ return ((i*7+d*3)%10) < (base/3); });
-    act.forEach(function(u){
-      var evs=["login_day","post","draw","review","gift","reply"];
-      var n = 1+Math.floor(Math.random()*3);
-      for(var k=0;k<n;k++) evt.push({ t: now-d*day+k*3600000, d:dayStr(now-d*day), ev:evs[Math.floor(Math.random()*evs.length)], uid:u.uid, rg:u.rg });
+  function loadSdk() {
+    if (!SAME || cli || loadSdk._x) return;
+    loadSdk._x = 1;
+    var s = document.createElement("script");
+    s.src = "./sdk.js";
+    s.onload = initCli;
+    document.head.appendChild(s);
+  }
+  function ensureFrame() {
+    if (frame) return frame;
+    frame = document.createElement("iframe");
+    frame.setAttribute("aria-hidden", "true");
+    frame.style.cssText = "position:fixed;left:-9999px;top:-9999px;width:1px;height:1px;border:0;opacity:0";
+    frame.src = HOST + "/_relay.html";
+    frame.onload = function () { fready = true; flush(); };
+    document.body.appendChild(frame);
+    window.addEventListener("message", function (e) {
+      if (e.origin !== HOST) return;
+      var d = e.data || {};
+      if (d && d.__sgrelay && d.id && waits[d.id]) { var fn = waits[d.id]; delete waits[d.id]; fn(d.data); }
     });
-    var regs = 1+Math.floor(Math.random()*3);
-    for(var r2=0;r2<regs;r2++){
-      var rgu = Math.random()<0.6?"cn":"intl";
-      evt.push({ t: now-d*day+r2*7200000, d:dayStr(now-d*day), ev:"register", uid:null, rg:rgu });
+    return frame;
+  }
+  function flush() {
+    if (!fready || !frame) return;
+    while (fq.length) {
+      var it = fq.shift();
+      try { frame.contentWindow.postMessage({ __sg: 1, id: it.id, name: it.name, args: it.args }, HOST); } catch (e) {}
     }
   }
-  return { type:"sanguo-analytics", users:users, evt:evt, demo:true };
-}
-
-/* ---------------- 统计 ---------------- */
-function activeOn(day, evSet, rg){
-  var s = {}; 
-  (DATA.evt||[]).forEach(function(e){
-    if(e.d!==day) return;
-    if(rg!=="all" && e.rg!==rg) return;
-    if(evSet && evSet.indexOf(e.ev)<0) return;
-    if(e.uid) s[e.uid]=1;
-  });
-  return Object.keys(s).length;
-}
-function lastNDays(n){ var a=[],now=new Date(); for(var i=n-1;i>=0;i--){ var d=new Date(now-i*86400000); a.push(dayStr(d)); } return a; }
-
-function kpis(){
-  var today=dayStr(), users=DATA.users||[];
-  var dau=activeOn(today,null,RG), mau=mauCount(RG);
-  var regs=(DATA.evt||[]).filter(function(e){return e.ev==="register"&&(RG==="all"||e.rg===RG);}).length;
-  var cards=0; users.forEach(function(u){cards+=u.cards||0;});
-  var u1=$("#kpis");
-  u1.innerHTML=
-    kpi(users.filter(rgUserFilter).length,"注册用户","累计账号数")+
-    kpi(dau,"DAU · 今日活跃","当日有行为的去重用户")+
-    kpi(mau,"MAU · 近30天活跃","滚动 30 天去重用户")+
-    kpi(regs,"新增注册(事件)","监控窗口内注册事件")+
-    kpi(cards,"发放卡牌","用户持有卡牌总数");
-}
-function rgUserFilter(u){ return RG==="all"||((u.rg||"intl")===RG); }
-function kpi(v,t,s){ return '<div class="kpi"><span>'+t+'</span><b>'+v+'</b><i>'+s+'</i></div>'; }
-function mauCount(rg){
-  var days=lastNDays(30), s={};
-  (DATA.evt||[]).forEach(function(e){
-    if(rg!=="all"&&e.rg!==rg) return;
-    if(days.indexOf(e.d)<0) return;
-    if(e.uid) s[e.uid]=1;
-  });
-  return Object.keys(s).length;
-}
-
-/* ---------------- 图表 ---------------- */
-function chart(){
-  var days=lastNDays(30);
-  var dau=days.map(function(d){return activeOn(d,null,RG);});
-  var regs=days.map(function(d){
-    return (DATA.evt||[]).filter(function(e){return e.ev==="register"&&e.d===d&&(RG==="all"||e.rg===RG);}).length;
-  });
-  var W=760,H=210,pad=34,bw=(W-pad-10)/30;
-  var mx=Math.max(4,Math.max.apply(null,dau));
-  var svg='<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;display:block">';
-  for(var g=0;g<=4;g++){
-    var y=H-24-(H-52)*g/4;
-    svg+='<line x1="'+pad+'" y1="'+y+'" x2="'+(W-6)+'" y2="'+y+'" stroke="#2a3242" stroke-width="1"/>'+
-      '<text x="'+(pad-6)+'" y="'+(y+4)+'" font-size="9" fill="#7c8698" text-anchor="end">'+Math.round(mx*g/4)+'</text>';
-  }
-  dau.forEach(function(v,i){
-    var h=(H-52)*v/mx, x=pad+4+i*bw;
-    svg+='<rect x="'+x.toFixed(1)+'" y="'+(H-24-h).toFixed(1)+'" width="'+(bw-3.4).toFixed(1)+'" height="'+Math.max(h,1.2).toFixed(1)+'" rx="2" fill="#c9a45c" opacity=".85"><title>'+days[i]+' DAU '+v+'</title></rect>';
-  });
-  var pts=regs.map(function(v,i){
-    var x=pad+4+i*bw+(bw-3.4)/2;
-    var y=H-24-(H-52)*v/Math.max(3,Math.max.apply(null,regs));
-    return x.toFixed(1)+","+y.toFixed(1);
-  }).join(" ");
-  svg+='<polyline points="'+pts+'" fill="none" stroke="#6b9fe8" stroke-width="1.8"/>';
-  [0,10,20,29].forEach(function(i){
-    var x=pad+4+i*bw+(bw-3.4)/2;
-    svg+='<text x="'+x.toFixed(1)+'" y="'+(H-8)+'" font-size="8.5" fill="#7c8698" text-anchor="middle">'+days[i].slice(5)+'</text>';
-  });
-  svg+='<rect x="'+pad+'" y="6" width="10" height="10" rx="2" fill="#c9a45c"/><text x="'+(pad+15)+'" y="15" font-size="9.5" fill="#b8bfcc">DAU 活跃</text>';
-  svg+='<rect x="'+(pad+92)+'" y="6" width="10" height="10" rx="2" fill="#6b9fe8"/><text x="'+(pad+107)+'" y="15" font-size="9.5" fill="#b8bfcc">新增注册</text>';
-  svg+="</svg>";
-  $("#chart").innerHTML=svg;
-}
-
-function regionBox(){
-  var cn=(DATA.users||[]).filter(function(u){return (u.rg||"intl")==="cn";}).length;
-  var it=(DATA.users||[]).length-cn;
-  var tot=Math.max(1,cn+it);
-  var cnE=0,itE=0;
-  (DATA.evt||[]).forEach(function(e){ if(e.rg==="cn")cnE++;else itE++; });
-  var eTot=Math.max(1,cnE+itE);
-  function arc(pct,color){
-    var a=pct*Math.PI*2-Math.PI/2, r=52,cx=70,cy=70;
-    var x=cx+r*Math.cos(a),y=cy+r*Math.sin(a),large=pct>0.5?1:0;
-    return '<path d="M '+cx+' '+cy+' L '+cx+' '+(cy-r)+' A '+r+' '+r+' 0 '+large+' 1 '+x.toFixed(1)+' '+y.toFixed(1)+' Z" fill="'+color+'"/>';
-  }
-  $("#regionBox").innerHTML=
-    '<div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap">'+
-    '<svg viewBox="0 0 140 140" style="width:140px">'+arc(cn/tot,"#e8a15c")+arc(it/tot,"#6b9fe8")+
-    '<circle cx="70" cy="70" r="30" fill="#161c26"/>'+
-    '<text x="70" y="66" font-size="15" fill="#e8e4d8" text-anchor="middle" font-weight="700">'+Math.round(100*cn/tot)+'%</text>'+
-    '<text x="70" y="82" font-size="9" fill="#7c8698" text-anchor="middle">国内占比</text></svg>'+
-    '<div style="font-size:12px;line-height:2.1;color:#b8bfcc">'+
-    '<div><span class="tag cn">国内</span>　注册 '+cn+' · 事件 '+cnE+'</div>'+
-    '<div><span class="tag intl">海外</span>　注册 '+it+' · 事件 '+itE+'</div>'+
-    '<div style="color:#7c8698;font-size:11px">按注册时浏览器时区判定</div></div></div>';
-}
-
-/* ---------------- 账号表 ---------------- */
-function accTable(){
-  var q=($("#accQ").value||"").trim().toLowerCase();
-  var rows=(DATA.users||[]).filter(rgUserFilter).filter(function(u){
-    if(!q) return true;
-    return ((u.name||"")+(u.email||"")+(u.phone||"")).toLowerCase().indexOf(q)>=0;
-  });
-  $("#accCount").textContent=rows.length+" 个账号";
-  var h='<thead><tr><th>昵称</th><th>邮箱</th><th>手机</th><th>注册时间</th><th>地区</th><th>积分</th><th>卡牌</th><th>连续登录</th><th>最近登录</th><th>状态</th><th>操作</th></tr></thead><tbody>';
-  if(!rows.length) h+='<tr><td colspan="11" class="empty">暂无账号数据 —— 请导入监控数据 JSON 或载入演示数据</td></tr>';
-  rows.forEach(function(u){
-    var rgTag=(u.rg||"intl")==="cn"?'<span class="tag cn">国内</span>':'<span class="tag intl">海外</span>';
-    var banned=bans[u.uid];
-    h+="<tr><td><b>"+esc(u.name)+"</b></td><td>"+esc(u.email)+"</td><td>"+esc(u.phone||"—")+"</td>"+
-      "<td>"+new Date(u.created).toLocaleDateString()+"</td><td>"+rgTag+"</td>"+
-      '<td class="num">'+(u.points||0)+"</td>"+'<td class="num">'+(u.cards||0)+"</td>"+
-      '<td class="num">'+(u.streak||0)+" / "+(u.bestStreak||0)+"</td><td>"+esc(u.lastLogin||"—")+"</td>"+
-      "<td>"+(banned?'<span class="tag ban">已封禁</span>':"正常")+"</td>"+
-      '<td><button class="btn sm '+(banned?"":"danger")+'" data-uid="'+esc(u.uid)+'" data-name="'+esc(u.name)+'" data-ban="'+(banned?"0":"1")+'">'+(banned?"解封":"封禁")+"</button></td></tr>";
-  });
-  $("#accTable").innerHTML=h+"</tbody>";
-}
-
-function renderAll(){ if(!DATA) return; kpis(); chart(); regionBox(); accTable();
-  $("#srcInfo").textContent="当前数据源："+(DATA.demo?"演示数据":(DATA.exportedAt?"导出文件 "+DATA.exportedAt:"本地缓存"))+" · 事件 "+(DATA.evt||[]).length+" 条";}
-
-/* ---------------- 登录 ---------------- */
-function tryLogin(){
-  var u=$("#adUser").value.trim(), p=$("#adPass").value;
-  Promise.all([sha256hex(u),sha256hex(p)]).then(function(h){
-    if(h[0]===U_HASH && h[1]===P_HASH){
-      sessionStorage.setItem(AUTH_KEY,"1");
-      enter();
-    }else{
-      $("#adErr").textContent="账号或密码错误（唯一管理员账号才可登录）";
+  function call(name, args) {
+    if (SAME) {
+      var c = initCli();
+      if (!c) { loadSdk(); return Promise.resolve(null); }
+      return Promise.resolve(c.database.rpc(name, args)).then(function (r) { return r && r.data; }, function () { return null; });
     }
-  }).catch(function(){ $("#adErr").textContent="浏览器不支持加密模块"; });
-}
-function enter(){
-  $("#loginMask").style.display="none";
-  $("#console").style.display="block";
-  loadLocal();
-  renderAll();
-}
+    return new Promise(function (res) {
+      var id = ++seq;
+      waits[id] = res;
+      fq.push({ id: id, name: name, args: args });
+      ensureFrame();
+      flush();
+      setTimeout(function () { if (waits[id]) { delete waits[id]; res(null); } }, 12000);
+    });
+  }
 
-$("#adLogin").addEventListener("click",tryLogin);
-$("#adPass").addEventListener("keydown",function(e){ if(e.key==="Enter") tryLogin(); });
-$("#btnLogout").addEventListener("click",function(){ sessionStorage.removeItem(AUTH_KEY); location.reload(); });
-$("#rgChips").addEventListener("click",function(e){
-  var b=e.target.closest(".chip"); if(!b) return;
-  RG=b.getAttribute("data-rg");
-  document.querySelectorAll("#rgChips .chip").forEach(function(x){x.classList.toggle("on",x===b);});
-  renderAll();
-});
-$("#accQ").addEventListener("input",accTable);
-$("#accTable").addEventListener("click",function(e){
-  var b=e.target.closest("button[data-uid]"); if(!b) return;
-  var uid=b.getAttribute("data-uid"), to=b.getAttribute("data-ban")==="1";
-  if(to){
-    if(!confirm('确认封禁用户「'+b.getAttribute("data-name")+'」？（本地监控标记）')) return;
-    bans[uid]=true;
-  }else delete bans[uid];
-  saveLocal(); accTable();
-});
-$("#fileImp").addEventListener("change",function(){
-  var f=this.files[0]; if(!f) return;
-  var rd=new FileReader();
-  rd.onload=function(){
-    try{
-      var d=JSON.parse(rd.result);
-      if(!d||(!d.users&&!d.evt)) throw 0;
-      DATA={ type:"sanguo-analytics", users:d.users||[], evt:d.evt||[], exportedAt:d.exportedAt||null };
-      saveLocal(); renderAll();
-    }catch(e){ alert("文件格式不正确：请导入图鉴站管理员导出的监控数据 JSON"); }
-  };
-  rd.readAsText(f);
-  this.value="";
-});
-$("#btnDemo").addEventListener("click",function(){ DATA=demoData(); saveLocal(); renderAll(); });
-$("#btnClear").addEventListener("click",function(){
-  if(!confirm("清空当前监控数据？")) return;
-  DATA=null; localStorage.removeItem("sg_admin_data"); renderAll();
-});
+  /* ---------- 工具 ---------- */
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function num(n) { return (n == null ? 0 : n).toLocaleString("zh-CN"); }
+  function dt(s) {
+    if (!s) return "—";
+    var d = new Date(s);
+    if (isNaN(d)) return esc(s);
+    var p = function (x) { return x < 10 ? "0" + x : x; };
+    return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()) + " " + p(d.getHours()) + ":" + p(d.getMinutes());
+  }
+  function maskPhone(p) { return p && p.length > 7 ? p.slice(0, 3) + "****" + p.slice(-4) : (p || "—"); }
+  function sha256(txt) {
+    if (!(window.crypto && crypto.subtle)) return Promise.resolve("");
+    var buf = new TextEncoder().encode(txt);
+    return crypto.subtle.digest("SHA-256", buf).then(function (h) {
+      return Array.prototype.map.call(new Uint8Array(h), function (b) { return ("0" + b.toString(16)).slice(-2); }).join("");
+    });
+  }
+  function toastMsg(t) { try { console.log("[admin]", t); } catch (e) {} }
 
-if(sessionStorage.getItem(AUTH_KEY)==="1") enter();
+  var state = { ov: null, tab: "ov", accQ: "", accRows: [], evtKind: "", evtOff: 0, evtRows: [], range: "all" };
+
+  /* ---------- 登录 ---------- */
+  function token() { try { return sessionStorage.getItem(TOK_KEY) || ""; } catch (e) { return ""; } }
+  function setToken(t) { try { t ? sessionStorage.setItem(TOK_KEY, t) : sessionStorage.removeItem(TOK_KEY); } catch (e) {} }
+
+  function doLogin() {
+    var u = ($("#user").value || "").trim();
+    var p = $("#pwd").value || "";
+    var err = $("#gateErr");
+    err.textContent = "";
+    if (!p) { err.textContent = "请输入密码"; return; }
+    var btn = $("#loginBtn");
+    btn.disabled = true; btn.textContent = "验证中…";
+    sha256("sanguo|" + u + "|" + p).then(function (h) {
+      if (!h) { err.textContent = "当前环境不支持安全摘要（需 HTTPS）"; btn.disabled = false; btn.textContent = "登 录"; return; }
+      return call("sg_admin_login", { p_hash: h, p_ua: (navigator.userAgent || "").slice(0, 180) }).then(function (r) {
+        btn.disabled = false; btn.textContent = "登 录";
+        if (!r || !r.ok) { err.textContent = "用户名或密码不正确"; return; }
+        setToken(r.token);
+        enterApp();
+      });
+    }).catch(function () {
+      btn.disabled = false; btn.textContent = "登 录";
+      err.textContent = "登录失败，请检查网络后重试";
+    });
+  }
+
+  function enterApp() {
+    $("#gate").hidden = true;
+    $("#app").hidden = false;
+    $("#refreshBtn").hidden = false;
+    $("#logoutBtn").hidden = false;
+    $("#whoTag").textContent = "fanyzou";
+    loadOverview(); loadAccounts(true);
+  }
+
+  function logout() {
+    setToken("");
+    $("#app").hidden = true;
+    $("#gate").hidden = false;
+    $("#refreshBtn").hidden = true;
+    $("#logoutBtn").hidden = true;
+    $("#whoTag").textContent = "未登录";
+    $("#pwd").value = "";
+  }
+
+  /* ---------- 概览 ---------- */
+  function loadOverview() {
+    var t = token(); if (!t) return;
+    call("sg_admin_overview", { p_token: t }).then(function (r) {
+      if (!r || r.ok === false) {
+        if (r && r.err === "unauthorized") { logout(); }
+        return;
+      }
+      state.ov = r;
+      renderKpis(r.totals);
+      renderChart();
+      renderRegions(r.regions || []);
+      renderTopEvents(r.events || []);
+    });
+  }
+
+  function renderKpis(t) {
+    t = t || {};
+    var items = [
+      { l: "今日访问", v: t.visits_today, d: "累计 " + num(t.visits_all), hi: 1 },
+      { l: "今日独立访客", v: t.uniq_today, d: "累计 " + num(t.uniq_all) },
+      { l: "今日登录", v: t.logins_today, d: "登录事件" },
+      { l: "今日注册", v: t.regs_today, d: "累计 " + num(t.regs_all) },
+      { l: "账号总数", v: t.regs_all, d: "含邮箱/手机号" },
+      { l: "事件总量", v: t.events_all, d: "访问+点击+登录" }
+    ];
+    $("#kpis").innerHTML = items.map(function (i) {
+      return '<div class="kpi' + (i.hi ? " hi" : "") + '"><div class="l">' + i.l + '</div><div class="v">' +
+        num(i.v) + '</div><div class="d">' + i.d + '</div></div>';
+    }).join("");
+  }
+
+  function renderChart() {
+    var o = state.ov; if (!o) return;
+    var d = (o.daily || []).slice(-30);
+    var key = state.range;
+    var vals = d.map(function (r) { return key === "all" ? r.visits : (r[key] || 0); });
+    var regs = d.map(function (r) { return r.regs || 0; });
+    var max = Math.max.apply(null, vals.concat([1]));
+    var maxR = Math.max.apply(null, regs.concat([1]));
+    var W = 640, H = 220, PL = 34, PB = 26, PT = 10;
+    var iw = W - PL - 8, ih = H - PB - PT;
+    var bw = iw / d.length;
+    var bars = "", line = "", labels = "";
+    d.forEach(function (r, i) {
+      var h = vals[i] / max * ih;
+      var x = PL + i * bw + bw * 0.18;
+      var y = PT + ih - h;
+      bars += '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + (bw * 0.64).toFixed(1) +
+        '" height="' + Math.max(0.8, h).toFixed(1) + '" rx="1.6" fill="url(#bg1)"><title>' + r.day + " · 访问 " + vals[i] + "</title></rect>";
+      var px = PL + i * bw + bw / 2;
+      var py = PT + ih - (regs[i] / maxR * ih) * 0.9;
+      line += (i ? "L" : "M") + px.toFixed(1) + " " + py.toFixed(1) + " ";
+      if (i % 5 === 0 || i === d.length - 1) {
+        labels += '<text x="' + px.toFixed(1) + '" y="' + (H - 8) + '" fill="#5d7183" font-size="9" text-anchor="middle">' +
+          r.day.slice(5) + "</text>";
+      }
+    });
+    var ylab = '<text x="4" y="' + (PT + 8) + '" fill="#5d7183" font-size="9">' + max + "</text>" +
+      '<text x="4" y="' + (PT + ih) + '" fill="#5d7183" font-size="9">0</text>';
+    $("#chart").innerHTML =
+      '<svg viewBox="0 0 ' + W + " " + H + '" width="100%" height="' + H + '" preserveAspectRatio="none">' +
+      '<defs><linearGradient id="bg1" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0%" stop-color="#f2c14e" stop-opacity=".95"/><stop offset="100%" stop-color="#c98d1e" stop-opacity=".55"/></linearGradient></defs>' +
+      '<line x1="' + PL + '" y1="' + (PT + ih) + '" x2="' + (W - 8) + '" y2="' + (PT + ih) + '" stroke="rgba(255,255,255,.09)"/>' +
+      ylab + bars +
+      '<path d="' + line + '" fill="none" stroke="#5b9bd5" stroke-width="1.6" stroke-linejoin="round"/>' + labels +
+      "</svg>" +
+      '<div class="hint" style="display:flex;gap:16px"><span style="color:#f2c14e">■ 访问量</span>' +
+      '<span style="color:#5b9bd5">— 新增注册</span>' +
+      '<span class="muted">' + (key === "all" ? "全部地区" : key === "cn" ? "仅国内" : "仅海外") + "</span></div>";
+  }
+
+  function renderRegions(list) {
+    var total = list.reduce(function (s, r) { return s + (r.cnt || 0); }, 0) || 1;
+    var name = { cn: "国内", intl: "海外", unknown: "未知" };
+    var col = { cn: "#e05b4b", intl: "#3fae7a", unknown: "#5d7183" };
+    var rows = list.map(function (r) {
+      var pct = (r.cnt / total * 100);
+      return '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">' +
+        '<span style="width:44px;font-size:12px;color:' + (col[r.region] || "#8fa3b3") + '">' + (name[r.region] || r.region) + "</span>" +
+        '<div class="bar" style="flex:1"><i style="width:' + pct.toFixed(1) + "%;background:" + (col[r.region] || "#5d7183") + '"></i></div>' +
+        '<span class="mono" style="width:64px;text-align:right">' + num(r.cnt) + " · " + pct.toFixed(0) + "%</span></div>";
+    }).join("");
+    $("#regions").innerHTML = rows || '<div class="empty">暂无数据</div>';
+  }
+
+  function renderTopEvents(list) {
+    var max = Math.max.apply(null, list.map(function (r) { return r.cnt || 0; }).concat([1]));
+    var lbl = { visit: "访问", click: "点击", login: "登录", register: "注册", draw: "抽卡", post: "发帖", admin_login: "后台登录" };
+    $("#topEv").innerHTML = list.length ? list.map(function (r) {
+      return '<div style="display:flex;align-items:center;gap:10px;margin-bottom:9px">' +
+        '<span style="width:76px;font-size:12px">' + (lbl[r.event] || esc(r.event)) + '<span class="muted mono" style="font-size:10px"> ' + esc(r.event) + "</span></span>" +
+        '<div class="bar" style="flex:1"><i style="width:' + ((r.cnt / max) * 100).toFixed(1) + '%"></i></div>' +
+        '<span class="mono" style="width:56px;text-align:right">' + num(r.cnt) + "</span></div>";
+    }).join("") : '<div class="empty">暂无数据</div>';
+  }
+
+  /* ---------- 账号 ---------- */
+  function loadAccounts(reset) {
+    var t = token(); if (!t) return;
+    if (reset) state.accRows = [];
+    call("sg_admin_accounts", { p_token: t, p_q: state.accQ, p_limit: 200, p_off: 0 }).then(function (r) {
+      if (!r || r.ok === false) { if (r && r.err === "unauthorized") logout(); return; }
+      state.accRows = r.rows || [];
+      $("#accTotal").textContent = "共 " + num(r.total) + " 条";
+      $("#accTable").innerHTML = state.accRows.length ? (
+        '<table><thead><tr><th>ID</th><th>邮箱</th><th>手机号</th><th>昵称</th><th>地区</th><th>来源</th><th>注册时间</th><th>最近登录</th><th>登录次数</th></tr></thead><tbody>' +
+        state.accRows.map(function (a, i) {
+          return "<tr><td class=\"mono\">" + a.id + "</td>" +
+            '<td class="mono">' + esc(a.email) + "</td>" +
+            '<td class="mono"><span data-ph="' + esc(a.phone || "") + '">' + esc(maskPhone(a.phone)) + '</span> ' +
+            (a.phone ? '<a href="javascript:;" data-reveal="' + i + '" style="font-size:11px">显示</a>' : "") + "</td>" +
+            "<td>" + esc(a.nick || "—") + "</td>" +
+            '<td><span class="tag ' + esc(a.region || "") + '">' + (a.region === "intl" ? "海外" : a.region === "cn" ? "国内" : esc(a.region || "—")) + "</span></td>" +
+            '<td class="muted mono" style="font-size:11px">' + esc(a.source || "—") + "</td>" +
+            '<td class="mono">' + dt(a.created_at) + "</td>" +
+            '<td class="mono">' + dt(a.last_login_at) + "</td>" +
+            '<td class="mono">' + (a.login_count || 0) + "</td></tr>";
+        }).join("") + "</tbody></table>"
+      ) : '<div class="empty">暂无注册数据</div>';
+    });
+  }
+
+  /* ---------- 事件 ---------- */
+  function loadEvents(more) {
+    var t = token(); if (!t) return;
+    if (!more) { state.evtOff = 0; state.evtRows = []; }
+    call("sg_admin_events", { p_token: t, p_kind: state.evtKind, p_limit: 60, p_off: state.evtOff }).then(function (r) {
+      if (!r || r.ok === false) { if (r && r.err === "unauthorized") logout(); return; }
+      state.evtRows = state.evtRows.concat(r.rows || []);
+      state.evtOff = state.evtRows.length;
+      $("#evtTotal").textContent = "共 " + num(r.total) + " 条";
+      $("#evtTable").innerHTML = state.evtRows.length ? (
+        '<table><thead><tr><th>时间</th><th>事件</th><th>对象/目标</th><th>页面</th><th>地区</th><th>会话</th></tr></thead><tbody>' +
+        state.evtRows.map(function (e) {
+          return '<tr><td class="mono">' + dt(e.ts) + "</td>" +
+            '<td><span class="tag">' + esc(e.event) + "</span></td>" +
+            "<td>" + esc(e.target || "—") + "</td>" +
+            '<td class="mono muted" style="font-size:11px">' + esc(e.page || "—") + "</td>" +
+            '<td><span class="tag ' + esc(e.region || "") + '">' + (e.region === "intl" ? "海外" : e.region === "cn" ? "国内" : esc(e.region || "—")) + "</span></td>" +
+            '<td class="mono muted" style="font-size:11px">' + esc(String(e.sid || "—").slice(0, 10)) + "</td></tr>";
+        }).join("") + "</tbody></table>"
+      ) : '<div class="empty">暂无事件</div>';
+    });
+  }
+
+  /* ---------- CSV ---------- */
+  function exportCsv() {
+    var rows = state.accRows || [];
+    if (!rows.length) return;
+    var head = ["id", "email", "phone", "nick", "region", "source", "created_at", "last_login_at", "login_count"];
+    var lines = [head.join(",")].concat(rows.map(function (a) {
+      return head.map(function (k) {
+        var v = a[k] == null ? "" : String(a[k]);
+        return '"' + v.replace(/"/g, '""') + '"';
+      }).join(",");
+    }));
+    var blob = new Blob(["\ufeff" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = "sanguo-accounts-" + new Date().toISOString().slice(0, 10) + ".csv";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
+  }
+
+  /* ---------- 事件绑定 ---------- */
+  $("#loginBtn").addEventListener("click", doLogin);
+  $("#pwd").addEventListener("keydown", function (e) { if (e.key === "Enter") doLogin(); });
+  $("#refreshBtn").addEventListener("click", function () {
+    loadOverview();
+    if (state.tab === "acc") loadAccounts(true);
+    if (state.tab === "evt") loadEvents(false);
+  });
+  $("#logoutBtn").addEventListener("click", logout);
+
+  $$(".tab").forEach(function (b) {
+    b.addEventListener("click", function () {
+      $$(".tab").forEach(function (x) { x.classList.remove("on"); });
+      b.classList.add("on");
+      state.tab = b.getAttribute("data-tab");
+      $("#tab-ov").hidden = state.tab !== "ov";
+      $("#tab-acc").hidden = state.tab !== "acc";
+      $("#tab-evt").hidden = state.tab !== "evt";
+      if (state.tab === "acc") loadAccounts(true);
+      if (state.tab === "evt") loadEvents(false);
+    });
+  });
+
+  $$("#seg button").forEach(function (b) {
+    b.addEventListener("click", function () {
+      $$("#seg button").forEach(function (x) { x.classList.remove("on"); });
+      b.classList.add("on");
+      state.range = b.getAttribute("data-k");
+      renderChart();
+    });
+  });
+
+  $("#accSearch").addEventListener("click", function () { state.accQ = $("#accQ").value.trim(); loadAccounts(true); });
+  $("#accQ").addEventListener("keydown", function (e) { if (e.key === "Enter") { state.accQ = $("#accQ").value.trim(); loadAccounts(true); } });
+  $("#accCsv").addEventListener("click", exportCsv);
+  $("#evtKind").addEventListener("change", function () { state.evtKind = this.value; loadEvents(false); });
+  $("#evtMore").addEventListener("click", function () { loadEvents(true); });
+
+  document.addEventListener("click", function (e) {
+    var a = e.target.closest ? e.target.closest("[data-reveal]") : null;
+    if (!a) return;
+    e.preventDefault();
+    var i = +a.getAttribute("data-reveal");
+    var row = state.accRows[i];
+    var sp = a.parentNode.querySelector("[data-ph]");
+    if (row && sp) { sp.textContent = row.phone || "—"; a.remove(); }
+  });
+
+  /* ---------- 启动 ---------- */
+  $("#modeTag").textContent = SAME ? "同源直连" : "跨域中继";
+  loadSdk();
+  if (token()) enterApp();
 })();
 </script>
 </body>
