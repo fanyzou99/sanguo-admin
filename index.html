@@ -430,7 +430,7 @@ tbody tr:hover{background:rgba(255,255,255,.025)}
       state.accRows = r.rows || [];
       $("#accTotal").textContent = "共 " + num(r.total) + " 条";
       $("#accTable").innerHTML = state.accRows.length ? (
-        '<table><thead><tr><th>ID</th><th>邮箱</th><th>手机号</th><th>昵称</th><th>地区</th><th>来源</th><th>注册时间</th><th>最近登录</th><th>登录次数</th></tr></thead><tbody>' +
+        '<table><thead><tr><th>ID</th><th>邮箱</th><th>手机号</th><th>昵称</th><th>地区</th><th>来源</th><th>注册时间</th><th>最近登录</th><th>登录次数</th><th>发放抽卡</th></tr></thead><tbody>' +
         state.accRows.map(function (a, i) {
           return "<tr><td class=\"mono\">" + a.id + "</td>" +
             '<td class="mono">' + esc(a.email) + "</td>" +
@@ -441,11 +441,43 @@ tbody tr:hover{background:rgba(255,255,255,.025)}
             '<td class="muted mono" style="font-size:11px">' + esc(a.source || "—") + "</td>" +
             '<td class="mono">' + dt(a.created_at) + "</td>" +
             '<td class="mono">' + dt(a.last_login_at) + "</td>" +
-            '<td class="mono">' + (a.login_count || 0) + "</td></tr>";
+            '<td class="mono">' + (a.login_count || 0) + "</td>" +
+            '<td><span style="display:inline-flex;gap:4px;align-items:center">' +
+            '<input data-gin="' + i + '" type="number" min="1" max="999" value="20" style="width:58px;padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:rgba(255,255,255,.04);color:var(--txt);font-family:inherit">' +
+            '<button class="btn" data-grant="' + i + '" style="padding:4px 9px">发放</button></span></td></tr>';
         }).join("") + "</tbody></table>"
       ) : '<div class="empty">暂无注册数据</div>';
     });
   }
+
+  /* ---------- 发放抽卡 ---------- */
+  function admTip(msg, bad) {
+    var d = document.createElement("div");
+    d.textContent = msg;
+    d.style.cssText = "position:fixed;right:18px;bottom:18px;z-index:99;padding:10px 16px;border-radius:8px;font-size:13px;" +
+      (bad ? "background:#5c2626;color:#ffd9d9" : "background:#1f3a26;color:#c9f2d3");
+    document.body.appendChild(d);
+    setTimeout(function () { d.parentNode && d.parentNode.removeChild(d); }, 2600);
+  }
+  document.getElementById("accTable").addEventListener("click", function (ev) {
+    var b = ev.target.closest ? ev.target.closest("[data-grant]") : null;
+    if (!b) return;
+    var i = parseInt(b.getAttribute("data-grant"), 10);
+    var a = state.accRows[i];
+    if (!a) return;
+    var inp = document.querySelector('[data-gin="' + i + '"]');
+    var n = inp ? parseInt(inp.value, 10) || 0 : 0;
+    if (n < 1 || n > 999) return admTip("次数需在 1~999 之间", true);
+    b.disabled = true;
+    call("sg_admin_grant_draws", { p_token: token(), p_email: a.email, p_n: n }).then(function (r) {
+      b.disabled = false;
+      if (r && r.ok) admTip("已向 " + a.email + " 发放 " + n + " 次抽卡");
+      else if (r && r.err === "unauthorized") { logout(); }
+      else if (r && r.err === "no_account") admTip("账号不存在（须已注册）", true);
+      else if (r && r.err === "bad_n") admTip("次数需在 1~999 之间", true);
+      else admTip("发放失败，请重试", true);
+    });
+  });
 
   /* ---------- 事件 ---------- */
   function loadEvents(more) {
@@ -457,10 +489,13 @@ tbody tr:hover{background:rgba(255,255,255,.025)}
       state.evtOff = state.evtRows.length;
       $("#evtTotal").textContent = "共 " + num(r.total) + " 条";
       $("#evtTable").innerHTML = state.evtRows.length ? (
-        '<table><thead><tr><th>时间</th><th>事件</th><th>对象/目标</th><th>页面</th><th>地区</th><th>会话</th></tr></thead><tbody>' +
+        '<table><thead><tr><th>时间</th><th>事件</th><th>访问者</th><th>IP / UA</th><th>对象/目标</th><th>页面</th><th>地区</th><th>会话</th></tr></thead><tbody>' +
         state.evtRows.map(function (e) {
           return '<tr><td class="mono">' + dt(e.ts) + "</td>" +
             '<td><span class="tag">' + esc(e.event) + "</span></td>" +
+            "<td>" + esc(e.who || "anybody") + "</td>" +
+            '<td class="mono muted" style="font-size:11px" title="' + esc(e.ua || "") + '">' +
+            (e.ip ? esc(e.ip) : (e.ua ? esc(String(e.ua).slice(0, 20)) + "…" : "—")) + "</td>" +
             "<td>" + esc(e.target || "—") + "</td>" +
             '<td class="mono muted" style="font-size:11px">' + esc(e.page || "—") + "</td>" +
             '<td><span class="tag ' + esc(e.region || "") + '">' + (e.region === "intl" ? "海外" : e.region === "cn" ? "国内" : esc(e.region || "—")) + "</span></td>" +
