@@ -430,7 +430,7 @@ tbody tr:hover{background:rgba(255,255,255,.025)}
       state.accRows = r.rows || [];
       $("#accTotal").textContent = "共 " + num(r.total) + " 条";
       $("#accTable").innerHTML = state.accRows.length ? (
-        '<table><thead><tr><th>ID</th><th>邮箱</th><th>手机号</th><th>昵称</th><th>地区</th><th>来源</th><th>注册时间</th><th>最近登录</th><th>登录次数</th><th>发放抽卡</th></tr></thead><tbody>' +
+        '<table><thead><tr><th>ID</th><th>邮箱</th><th>手机号</th><th>昵称</th><th>地区</th><th>注册站点</th><th>注册时间</th><th>最近登录</th><th>登录次数</th><th>发放抽卡</th></tr></thead><tbody>' +
         state.accRows.map(function (a, i) {
           return "<tr><td class=\"mono\">" + a.id + "</td>" +
             '<td class="mono">' + esc(a.email) + "</td>" +
@@ -438,7 +438,8 @@ tbody tr:hover{background:rgba(255,255,255,.025)}
             (a.phone ? '<a href="javascript:;" data-reveal="' + i + '" style="font-size:11px">显示</a>' : "") + "</td>" +
             "<td>" + esc(a.nick || "—") + "</td>" +
             '<td><span class="tag ' + esc(a.region || "") + '">' + (a.region === "intl" ? "海外" : a.region === "cn" ? "国内" : esc(a.region || "—")) + "</span></td>" +
-            '<td class="muted mono" style="font-size:11px">' + esc(a.source || "—") + "</td>" +
+            '<td><span class="tag ' + (siteOf(a.source) === "cn" ? "cn" : "intl") + '">' + (siteOf(a.source) === "cn" ? "国内站" : "海外站") + "</span> " +
+            '<span class="muted mono" style="font-size:11px">' + esc(a.source || "—") + "</span></td>" +
             '<td class="mono">' + dt(a.created_at) + "</td>" +
             '<td class="mono">' + dt(a.last_login_at) + "</td>" +
             '<td class="mono">' + (a.login_count || 0) + "</td>" +
@@ -450,7 +451,45 @@ tbody tr:hover{background:rgba(255,255,255,.025)}
     });
   }
 
-  /* ---------- 发放抽卡 ---------- */
+  /* ---------- 发放抽卡（V13：确认弹窗 + 发放目标站点） ---------- */
+  function siteOf(src) {
+    return /workbuddy\.host/i.test(String(src || "")) ? "cn" : "intl";
+  }
+  function grantModal(a, n) {
+    var site = siteOf(a.source);
+    var ov = document.createElement("div");
+    ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:98;display:flex;align-items:center;justify-content:center";
+    ov.innerHTML = '<div style="background:#141a24;border:1px solid #2a3547;border-radius:10px;padding:20px 22px;min-width:360px;color:#e8ecf3;font-family:inherit">' +
+      '<div style="font-weight:600;font-size:15px;margin-bottom:12px">确认发放抽卡</div>' +
+      '<div style="font-size:13px;margin-bottom:8px">账号：<span class="mono">' + esc(a.email) + "</span></div>" +
+      '<div style="font-size:13px;margin-bottom:14px">注册站点：<span class="tag ' + (site === "cn" ? "cn" : "intl") + '">' + (site === "cn" ? "国内站" : "海外站") + "</span></div>" +
+      '<div style="font-size:13px;margin-bottom:10px">次数：<input id="gN" type="number" min="1" max="999" value="' + n + '" style="width:70px;padding:4px 6px;border:1px solid #2a3547;border-radius:6px;background:rgba(255,255,255,.04);color:#e8ecf3;font-family:inherit"></div>' +
+      '<div style="font-size:13px;margin-bottom:8px">发放到站点：</div>' +
+      '<div style="font-size:13px;margin-bottom:12px;display:flex;gap:18px">' +
+      '<label style="display:inline-flex;align-items:center;gap:5px;white-space:nowrap"><input type="radio" name="gsite" value="cn"' + (site === "cn" ? " checked" : "") + "> 国内站</label>" +
+      '<label style="display:inline-flex;align-items:center;gap:5px;white-space:nowrap"><input type="radio" name="gsite" value="intl"' + (site !== "cn" ? " checked" : "") + "> 海外站</label></div>" +
+      '<div class="muted" style="font-size:12px;margin-bottom:14px">发放仅对该站点生效：用户在对应站点登录后自动到账，另一站点不受影响。</div>' +
+      '<div style="display:flex;gap:8px;justify-content:flex-end">' +
+      '<button id="gCancel" class="btn" style="padding:6px 14px">取消</button>' +
+      '<button id="gOk" class="btn" style="padding:6px 14px;background:#2c5a38">确认发放</button></div></div>';
+    document.body.appendChild(ov);
+    ov.querySelector("#gCancel").onclick = function () { document.body.removeChild(ov); };
+    ov.querySelector("#gOk").onclick = function () {
+      var site2 = ov.querySelector('input[name="gsite"]:checked').value;
+      var n2 = parseInt(ov.querySelector("#gN").value, 10) || 0;
+      if (n2 < 1 || n2 > 999) { admTip("次数需在 1~999 之间", true); return; }
+      ov.querySelector("#gOk").disabled = true;
+      call("sg_admin_grant_draws", { p_token: token(), p_email: a.email, p_n: n2, p_site: site2 }).then(function (r) {
+        document.body.removeChild(ov);
+        if (r && r.ok) admTip("已向 " + a.email + " 在" + (site2 === "cn" ? "国内站" : "海外站") + "发放 " + n2 + " 次抽卡");
+        else if (r && r.err === "unauthorized") { logout(); }
+        else if (r && r.err === "no_account") admTip("账号不存在（须已注册）", true);
+        else if (r && r.err === "bad_n") admTip("次数需在 1~999 之间", true);
+        else if (r && r.err === "bad_site") admTip("发放站点无效", true);
+        else admTip("发放失败，请重试", true);
+      });
+    };
+  }
   function admTip(msg, bad) {
     var d = document.createElement("div");
     d.textContent = msg;
@@ -468,15 +507,7 @@ tbody tr:hover{background:rgba(255,255,255,.025)}
     var inp = document.querySelector('[data-gin="' + i + '"]');
     var n = inp ? parseInt(inp.value, 10) || 0 : 0;
     if (n < 1 || n > 999) return admTip("次数需在 1~999 之间", true);
-    b.disabled = true;
-    call("sg_admin_grant_draws", { p_token: token(), p_email: a.email, p_n: n }).then(function (r) {
-      b.disabled = false;
-      if (r && r.ok) admTip("已向 " + a.email + " 发放 " + n + " 次抽卡");
-      else if (r && r.err === "unauthorized") { logout(); }
-      else if (r && r.err === "no_account") admTip("账号不存在（须已注册）", true);
-      else if (r && r.err === "bad_n") admTip("次数需在 1~999 之间", true);
-      else admTip("发放失败，请重试", true);
-    });
+    grantModal(a, n);
   });
 
   /* ---------- 事件 ---------- */
